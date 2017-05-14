@@ -1,0 +1,20 @@
+opam-version: "1.2"
+name: "bip39"
+version: "1.0"
+maintainer: "Vincent Bernardoff <vb@luminar.eu.org>"
+authors: ["Vincent Bernardoff <vb@luminar.eu.org>"]
+homepage: "https://github.com/vbmithr/ocaml-bip39"
+doc: "https://vbmithr.github.io/ocaml-bip39/doc"
+license: "ISC"
+dev-repo: "https://github.com/vbmithr/ocaml-bip39.git"
+bug-reports: "https://github.com/vbmithr/ocaml-bip39/issues"
+tags: []
+available: [ ocaml-version >= "4.03.0" ]
+depends: [
+  "jbuilder" {build & >= "1.0+beta8"}
+  "base" {build & >= "v0.9"}
+  "stdio" {build & >= "v0.9"}
+  "nocrypto" {>= "0.5.4"}
+  "pbkdf" {>= "0.2.0"}
+]
+build: [ "jbuilder" "build" "@install" ]

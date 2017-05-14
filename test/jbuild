@@ -1,0 +1,8 @@
+(executable
+ ((name test)
+  (libraries (bip39 hex oUnit))))
+
+(alias
+ ((name    runtest)
+  (deps    (test.exe))
+  (action  (run ${<}))))
