@@ -62,6 +62,18 @@ let to_words { lang ; indices } =
   let module L = (val module_of_language lang : LANGUAGE) in
   List.map indices ~f:(List.nth L.words)
 
+let pp ppf t =
+  let open Format in
+  let words = to_words t in
+  let pp_mnemonic =
+    pp_print_list
+      ~pp_sep:(fun fmt () -> fprintf fmt " ")
+      pp_print_string in
+  fprintf ppf "%a" pp_mnemonic words
+
+let show t =
+  Format.asprintf "%a" pp t
+
 let int_of_bits bits =
   snd @@ List.fold_right bits ~init:(0, 0) ~f:begin fun b (i, res) ->
     succ i, if b then res lor (1 lsl i) else res

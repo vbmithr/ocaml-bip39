@@ -12,6 +12,9 @@ type language =
 type t
 (** Abstract type of a mnemonic *)
 
+val pp : Format.formatter -> t -> unit
+val show : t -> string
+
 val of_words : ?lang:language -> string list -> t
 (** [of_words ?lang words] is the mnemonic implied by [words] in
     [lang]. Defaults to English.
