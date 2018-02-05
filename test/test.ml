@@ -1,4 +1,4 @@
-open OUnit2
+open Alcotest
 
 type vector = {
   entropy : Hex.t ;
@@ -118,19 +118,21 @@ let pp_diff ppf (l1, l2) =
       succ i
     end
 
-let test_basic ctx =
+let vectors () =
   ListLabels.iteri vectors ~f:begin fun i { entropy ; words ; seed } ->
     let words = String.split_on_char ' ' words in
     let mnemonic = Bip39.of_entropy (Cstruct.of_string (Hex.to_string entropy)) in
     let words_computed = Bip39.to_words mnemonic in
-    assert_equal ~pp_diff ~msg:("words " ^ string_of_int i) words words_computed ;
+    assert (words = words_computed) ;
     let seed_computed = Bip39.to_seed ~passphrase:"TREZOR" mnemonic in
-    assert_equal ~msg:("seed " ^  string_of_int i) (Hex.to_string seed) seed_computed
+    assert ((Hex.to_string seed) = seed_computed)
   end
 
-let suite =
-  "bip39" >::: [
-    "test_basic" >:: test_basic ;
-  ]
+let basic = [
+  "vectors", `Quick, vectors ;
+]
 
-let () = run_test_tt_main suite
+let () =
+  Alcotest.run "bip39" [
+    "basic", basic ;
+  ]

@@ -10,11 +10,11 @@ dev-repo: "https://github.com/vbmithr/ocaml-bip39.git"
 bug-reports: "https://github.com/vbmithr/ocaml-bip39/issues"
 tags: []
 available: [ ocaml-version >= "4.03.0" ]
+build: [ "jbuilder" "build" "-j" jobs "-p" name "@install" ]
 depends: [
-  "jbuilder" {build & >= "1.0+beta8"}
-  "base" {build & >= "v0.9"}
-  "stdio" {build & >= "v0.9"}
+  "jbuilder" {build & >= "1.0+beta17"}
+  "base" {build & >= "v0.10.0"}
+  "stdio" {build & >= "v0.10.0"}
   "nocrypto" {>= "0.5.4"}
   "pbkdf" {>= "0.2.0"}
 ]
-build: [ "jbuilder" "build" "@install" ]

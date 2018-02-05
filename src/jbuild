@@ -1,11 +1,15 @@
+(jbuild_version 1)
+
 (library
  ((name        bip39)
   (public_name bip39)
-  (modules (chinese_simplified chinese_traditional english french italian japanese spanish bip39))
+  (modules (chinese_simplified chinese_traditional
+            english french italian japanese spanish bip39))
   (libraries (nocrypto pbkdf))))
 
 (rule
- ((targets (chinese_simplified.ml chinese_traditional.ml english.ml french.ml italian.ml japanese.ml spanish.ml))
+ ((targets (chinese_simplified.ml chinese_traditional.ml
+            english.ml french.ml italian.ml japanese.ml spanish.ml))
   (deps    (generator.exe (files_recursively_in ../gen)))
   (action  (run ${<} ${@}))))
 
@@ -13,9 +17,3 @@
  ((name generator)
   (modules (generator))
   (libraries (stdio))))
-
-;; (executable
-;;  ((name wallet)
-;;   (public_name wallet_native)
-;;   (modules (wallet))
-;;   (libraries (cmdliner))))

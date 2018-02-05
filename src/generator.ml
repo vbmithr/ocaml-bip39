@@ -15,21 +15,17 @@ let pp_print_quoted_string_list ppf strs =
   pp_print_list ~pp_sep:(fun ppf () -> pp_print_string ppf ";")
     pp_print_quoted_string ppf strs
 
-let main () =
-  let ml_files = String.split ~on:' ' Caml.Sys.argv.(1) in
-  let txt_files = List.map ml_files ~f:begin fun lang ->
-      "../gen/" ^ (Caml.Filename.remove_extension lang) ^ ".txt"
-    end in
-  List.iter2_exn ml_files txt_files ~f:begin fun ml_file txt_file ->
-    let words = In_channel.read_lines txt_file in
-    Out_channel.with_file
-      ~binary:false ~append:false ~fail_if_exists:false ml_file ~f:begin fun oc ->
-      let ppf = Caml.Format.formatter_of_out_channel oc in
-      Caml.Format.fprintf ppf "let words = [%a]@." pp_print_quoted_string_list words
-    end
+let gen ml =
+  let txt = "../gen/" ^ (Caml.Filename.remove_extension ml) ^ ".txt" in
+  let words = In_channel.read_lines txt in
+  Out_channel.with_file
+    ~binary:false ~append:false ~fail_if_exists:false ml ~f:begin fun oc ->
+    let ppf = Caml.Format.formatter_of_out_channel oc in
+    Caml.Format.fprintf ppf "let words = [%a]@." pp_print_quoted_string_list words
   end
 
-let () = main ()
+let () =
+  Array.to_list Caml.Sys.argv |> List.tl_exn |> List.iter ~f:gen
 
 (*---------------------------------------------------------------------------
    Copyright (c) 2017 Vincent Bernardoff
