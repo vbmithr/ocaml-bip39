@@ -125,7 +125,7 @@ let vectors () =
     let words_computed = Bip39.to_words mnemonic in
     assert (words = words_computed) ;
     let seed_computed = Bip39.to_seed ~passphrase:"TREZOR" mnemonic in
-    assert ((Hex.to_string seed) = seed_computed)
+    assert ((Hex.to_cstruct seed) = seed_computed)
   end
 
 let basic = [

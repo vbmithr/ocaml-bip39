@@ -3,8 +3,6 @@
    Distributed under the ISC license, see terms at the end of the file.
   ---------------------------------------------------------------------------*)
 
-open Nocrypto
-
 type language =
   | English
   | Japanese
@@ -20,12 +18,10 @@ type t
 val pp : Format.formatter -> t -> unit
 val show : t -> string
 
-val of_words : ?lang:language -> string list -> t
-(** [of_words ?lang words] is the mnemonic implied by [words] in
-    [lang]. Defaults to English.
-
-    @raises [Invalid_argument] if [List.length words] is not in {12,
-    15, 18, 21, 24}. *)
+val of_words : ?lang:language -> string list -> t option
+(** [of_words ?lang words] is [Some mnemonic] if [words] is a list
+    containing a valids number of valid words in [lang]. Defaults to
+    English. *)
 
 val to_words : t -> string list
 (** [to_words mnemonic] is the list of words corresponding to
@@ -37,18 +33,10 @@ val of_entropy : ?lang:language -> Cstruct.t -> t
     @raises [Invalid_argument] is [List.length bytes] is not in { 16,
     20, 24, 28, 32 }. *)
 
-val create : ?g:Rng.g -> ?lang:language -> int -> t
-(** [gen_mnemonic ?g length] is a BIP39 mnemonic from a generated seed
-    of length [len].
-
-    @raises [Invalid_argument] is [List.length bytes] is not in { 16,
-    20, 24, 28, 32 }. *)
-
-val to_seed :
-  ?passphrase:string -> t -> string
-(** [seed_of_mnemonic ?passphrase mnemonic] is a 64 bytes long string
-    derived from a BIP39 mnemonic [mnemonic], using the optional
-    passphrase [passphrase] if provided. *)
+val to_seed : ?passphrase:string -> t -> Cstruct.t
+(** [to_seed ?passphrase mnemonic] is 64 bytes derived from a BIP39
+    mnemonic [mnemonic], using the optional passphrase [passphrase] if
+    provided. *)
 
 (*---------------------------------------------------------------------------
    Copyright (c) 2017 Vincent Bernardoff

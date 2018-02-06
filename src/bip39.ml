@@ -4,7 +4,6 @@
   ---------------------------------------------------------------------------*)
 
 open StdLabels
-open Nocrypto
 
 type language =
   | English
@@ -26,7 +25,7 @@ let module_of_language = function
   | French -> (module French : LANGUAGE)
   | Italian -> (module Italian : LANGUAGE)
 
-let acceptable_lengths = [16 ; 20 ; 24 ; 28 ; 32]
+let acceptable_num_words = [12 ; 15 ; 18 ; 21 ; 24]
 
 type entropy = {
   bytes : Cstruct.t ;
@@ -37,12 +36,12 @@ type entropy = {
 
 let entropy_of_bytes bytes =
   match Cstruct.len bytes with
-  | 16 -> { bytes ; length = 16 ; digest_length = 4 ; num_words = 12 }
-  | 20 -> { bytes ; length = 20 ; digest_length = 5 ; num_words = 15 }
-  | 24 -> { bytes ; length = 24 ; digest_length = 6 ; num_words = 18 }
-  | 28 -> { bytes ; length = 28 ; digest_length = 7 ; num_words = 21 }
-  | 32 -> { bytes ; length = 32 ; digest_length = 8 ; num_words = 24 }
-  | _ -> invalid_arg "Bip39.entropy_of_bytes"
+  | 16 -> Some { bytes ; length = 16 ; digest_length = 4 ; num_words = 12 }
+  | 20 -> Some { bytes ; length = 20 ; digest_length = 5 ; num_words = 15 }
+  | 24 -> Some { bytes ; length = 24 ; digest_length = 6 ; num_words = 18 }
+  | 28 -> Some { bytes ; length = 28 ; digest_length = 7 ; num_words = 21 }
+  | 32 -> Some { bytes ; length = 32 ; digest_length = 8 ; num_words = 24 }
+  | _ -> None
 
 type t = {
   lang : language ;
@@ -55,13 +54,21 @@ let find_index words word =
     List.iteri words ~f:begin fun i w ->
       if String.compare word w = 0 then (index := i ; raise Exit)
     end ;
-    raise Not_found
-  with Exit -> !index
+    None
+  with Exit -> Some !index
 
 let of_words ?(lang=English) words =
-  let module L = (val module_of_language lang : LANGUAGE) in
-  let indices = List.map words ~f:(find_index L.words) in
-  { lang ; indices }
+  if not List.(mem (length words) ~set:acceptable_num_words) then
+    None
+  else
+    let module L = (val module_of_language lang : LANGUAGE) in
+    List.fold_right words ~init:(Some []) ~f:begin fun word acc ->
+      match acc, find_index L.words word with
+      | Some acc, Some i -> Some (i :: acc)
+      | _ -> None
+    end |> function
+    | None -> None
+    | Some indices -> Some { lang ; indices }
 
 let to_words { lang ; indices } =
   let module L = (val module_of_language lang : LANGUAGE) in
@@ -122,26 +129,21 @@ let pack l pack_len =
   List.rev (inner (0, [], []) l)
 
 let of_entropy ?(lang=English) entropy =
-  let { bytes ; length ; digest_length ; num_words } = entropy_of_bytes entropy in
-  let digest = Cstruct.get_char (Hash.SHA256.digest entropy) 0 in
-  let digest = list_sub (bits_of_char digest) digest_length in
-  let entropy = bits_of_bytes (Cstruct.to_string bytes) @ digest in
-  let indices = List.map (pack entropy 11) ~f:int_of_bits in
-  { lang ; indices }
+  match entropy_of_bytes entropy with
+  | None -> invalid_arg "Bip39.of_entropy: wrong entropy length"
+  | Some { bytes ; digest_length ; _ } ->
+      let digest = Cstruct.get_char (Nocrypto.Hash.SHA256.digest entropy) 0 in
+      let digest = list_sub (bits_of_char digest) digest_length in
+      let entropy = bits_of_bytes (Cstruct.to_string bytes) @ digest in
+      let indices = List.map (pack entropy 11) ~f:int_of_bits in
+      { lang ; indices }
 
-let create ?g ?lang len =
-  if not (List.mem len acceptable_lengths) then
-    invalid_arg "Bip39.create: invalid length" ;
-  let entropy = Rng.generate ?g len in
-  of_entropy ?lang entropy
-
-let to_seed ?(passphrase="") ({ lang ; indices } as t) =
+let to_seed ?(passphrase="") ({ lang ; _ } as t) =
   let words = to_words t in
   let sep = match lang with Japanese -> "\xE3\x80\x80" | _ -> " " in
   let password = Cstruct.of_string (String.concat ~sep words) in
   let salt = Cstruct.of_string ("mnemonic" ^ passphrase) in
-  Pbkdf.pbkdf2 ~prf:`SHA512 ~password ~salt ~count:2048 ~dk_len:64l |>
-  Cstruct.to_string
+  Pbkdf.pbkdf2 ~prf:`SHA512 ~password ~salt ~count:2048 ~dk_len:64l
 
 (*---------------------------------------------------------------------------
    Copyright (c) 2017 Vincent Bernardoff
