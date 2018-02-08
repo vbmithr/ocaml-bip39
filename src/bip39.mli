@@ -3,34 +3,33 @@
    Distributed under the ISC license, see terms at the end of the file.
   ---------------------------------------------------------------------------*)
 
-type language =
-  | English
-  | Japanese
-  | Spanish
-  | Chinese_simplified
-  | Chinese_traditional
-  | French
-  | Italian
-
 type t
 (** Abstract type of a mnemonic *)
 
 val pp : Format.formatter -> t -> unit
 val show : t -> string
 
-val of_words : ?lang:language -> string list -> t option
-(** [of_words ?lang words] is [Some mnemonic] if [words] is a list
-    containing a valids number of valid words in [lang]. Defaults to
-    English. *)
+val index_of_word : string -> int option
+(** [find_index word] is [Some i] where is is the index of [word] in
+    the BIP39 word list, or [None] if no such word is in the list. *)
 
-val of_words_exn : ?lang:language -> string list -> t
+val of_indices : int list -> t option
+(** [of_indices idxs] is [Some mnemonic] if indices are all in range
+    [0-2047] or [None] otherwise. *)
+
+val to_indices : t -> int list
+(** [to_indices t] is the list of indices corresponding to [t]. *)
+
+val of_words : string list -> t option
+(** [of_words words] is [Some mnemonic] if [words] is a list
+    containing a valids number of valid english words. *)
 
 val to_words : t -> string list
 (** [to_words mnemonic] is the list of words corresponding to
     [mnemonic]. *)
 
-val of_entropy : ?lang:language -> Cstruct.t -> t
-(** [of_entropy ?lang bytes] is the mnemonic derived from [bytes].
+val of_entropy : Cstruct.t -> t
+(** [of_entropy bytes] is the mnemonic derived from [bytes].
 
     @raises [Invalid_argument] is [List.length bytes] is not in { 16,
     20, 24, 28, 32 }. *)
