@@ -23,6 +23,8 @@ val of_words : ?lang:language -> string list -> t option
     containing a valids number of valid words in [lang]. Defaults to
     English. *)
 
+val of_words_exn : ?lang:language -> string list -> t
+
 val to_words : t -> string list
 (** [to_words mnemonic] is the list of words corresponding to
     [mnemonic]. *)

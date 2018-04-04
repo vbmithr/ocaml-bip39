@@ -70,6 +70,11 @@ let of_words ?(lang=English) words =
     | None -> None
     | Some indices -> Some { lang ; indices }
 
+let of_words_exn ?lang words =
+  match of_words ?lang words with
+  | None -> invalid_arg "of_words_exn"
+  | Some t -> t
+
 let to_words { lang ; indices } =
   let module L = (val module_of_language lang : LANGUAGE) in
   List.map indices ~f:(List.nth L.words)
